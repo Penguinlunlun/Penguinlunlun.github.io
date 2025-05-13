@@ -1,528 +1,176 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="zh-Hant">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>沒辦法 我不會畫畫</title>
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background-color: #f0f0f0;
-            font-family: Arial, "Microsoft JhengHei", sans-serif;
-        }
-
-        canvas {
-            display: block;
-        }
-
-        #info {
-            position: absolute;
-            top: 10px;
-            width: 100%;
-            text-align: center;
-            color: #333;
-            padding: 5px;
-            background-color: rgba(255, 255, 255, 0.7);
-            border-radius: 5px;
-            z-index: 100;
-            pointer-events: none;
-        }
-
-        #error {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            color: red;
-            background-color: rgba(255, 255, 255, 0.7);
-            padding: 5px;
-            border-radius: 5px;
-            display: none;
-        }
-    </style>
+    <title>個人介紹網站</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-
 <body>
-    <div id="info">好多鋁罐組成的3D圓環<br /># 我不會畫畫 但我會html加架網站(?<br />(雖然只是架在github上而已.x.)</div>
-    <div id="error"></div>
-
-    <!-- 使用更可靠的CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.159.0/three.min.js"></script>
-
-    <script>
-        // 嘗試加載庫並處理錯誤
-        try {
-            // 檢查Three.js是否正確加載
-            if (typeof THREE === 'undefined') {
-                throw new Error('Three.js 未正確加載');
-            }
-
-            // 初始化場景、相機和渲染器
-            const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xf0f0f0);
-
-            // 使用更接近Python原始版本的相機位置
-            const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(12, 8, 15);
-
-            const renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(renderer.domElement);
-
-            // 添加格子地面（與Python版類似的背景）
-            const gridHelper = new THREE.GridHelper(20, 20, 0xcccccc, 0xcccccc);
-            scene.add(gridHelper);
-
-            // 添加燈光
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-            scene.add(ambientLight);
-
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(10, 20, 15);
-            scene.add(directionalLight);
-
-            // 與Python版本一致的模型參數
-            const R = 5;              // 圓環中心半徑
-            const r_outer = 1.0;      // 外圓半徑
-            const r_inner = 0.6;      // 內圓半徑（中空）
-            const r_offset = 0.2;     // 銅管圓環偏移半徑
-
-            // 創建主圓環（上半部分）- 使用管線方法而非實體，更接近Python的線框效果
-            const mainRingMaterial = new THREE.MeshLambertMaterial({
-                color: 0x4169e1,  // 皇家藍
-                transparent: true,
-                opacity: 0.6,
-                side: THREE.DoubleSide
-            });
-
-            // 為每條線創建管線幾何體
-            for (let angle = Math.PI; angle <= 2 * Math.PI; angle += Math.PI / 30) {
-                // 創建各個角度的線
-                const lineGeometry = new THREE.BufferGeometry();
-                const linePoints = [];
-
-                // 圓環上的點
-                for (let phi = 0; phi <= 2 * Math.PI; phi += Math.PI / 25) {
-                    const x = (R + r_outer * Math.cos(angle)) * Math.cos(phi);
-                    const y = r_outer * Math.sin(angle);
-                    const z = (R + r_outer * Math.cos(angle)) * Math.sin(phi);
-                    linePoints.push(new THREE.Vector3(x, y, z));
-                }
-
-                lineGeometry.setFromPoints(linePoints);
-                const lineMaterial = new THREE.LineBasicMaterial({ color: 0x4169e1, opacity: 0.6, transparent: true });
-                const line = new THREE.Line(lineGeometry, lineMaterial);
-                scene.add(line);
-            }
-
-            // 創建銅管圓環 - 使用實體Torus，平行於主圓環
-            const copperRingMaterial = new THREE.MeshPhongMaterial({
-                color: 0xffa500,  // 橙色
-                shininess: 80,
-                side: THREE.DoubleSide
-            });
-
-            const copperRingGeometry = new THREE.TorusGeometry(R, r_offset, 16, 100);
-            const copperRing = new THREE.Mesh(copperRingGeometry, copperRingMaterial);
-            // 旋轉90度使圓環平行於主圓環
-            copperRing.rotation.x = Math.PI / 2;
-            // 不需要垂直偏移，僅在平行面上偏移
-            scene.add(copperRing);
-
-            // 添加坐標軸
-            const axesHelper = new THREE.AxesHelper(8);
-            scene.add(axesHelper);
-
-            // 內嵌OrbitControls實現（不依賴外部引用）
-            class OrbitControls {
-                constructor(camera, domElement) {
-                    this.camera = camera;
-                    this.domElement = domElement;
-                    this.target = new THREE.Vector3();
-                    this.enableDamping = true;
-                    this.dampingFactor = 0.25;
-                    this.enabled = true;
-
-                    this.minDistance = 0;
-                    this.maxDistance = Infinity;
-
-                    this.minPolarAngle = 0;
-                    this.maxPolarAngle = Math.PI;
-
-                    this.minAzimuthAngle = -Infinity;
-                    this.maxAzimuthAngle = Infinity;
-
-                    this.enableZoom = true;
-                    this.zoomSpeed = 1.0;
-
-                    this.enableRotate = true;
-                    this.rotateSpeed = 1.0;
-
-                    this.enablePan = true;
-                    this.panSpeed = 1.0;
-
-                    this.screenSpacePanning = false;
-
-                    this.keyPanSpeed = 7.0;
-
-                    this.autoRotate = false;
-                    this.autoRotateSpeed = 2.0;
-
-                    this.keys = { LEFT: 'ArrowLeft', UP: 'ArrowUp', RIGHT: 'ArrowRight', BOTTOM: 'ArrowDown' };
-
-                    this.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
-
-                    // 私有變量
-                    this._spherical = new THREE.Spherical();
-                    this._sphericalDelta = new THREE.Spherical();
-
-                    this._scale = 1;
-                    this._panOffset = new THREE.Vector3();
-
-                    this._zoomChanged = false;
-
-                    this._rotateStart = new THREE.Vector2();
-                    this._rotateEnd = new THREE.Vector2();
-                    this._rotateDelta = new THREE.Vector2();
-
-                    this._panStart = new THREE.Vector2();
-                    this._panEnd = new THREE.Vector2();
-                    this._panDelta = new THREE.Vector2();
-
-                    this._dollyStart = new THREE.Vector2();
-                    this._dollyEnd = new THREE.Vector2();
-                    this._dollyDelta = new THREE.Vector2();
-
-                    this._state = 'NONE';
-
-                    // 事件監聽
-                    this.domElement.addEventListener('contextmenu', this._onContextMenu.bind(this), false);
-                    this.domElement.addEventListener('mousedown', this._onMouseDown.bind(this), false);
-                    this.domElement.addEventListener('wheel', this._onMouseWheel.bind(this), false);
-
-                    this.domElement.addEventListener('touchstart', this._onTouchStart.bind(this), false);
-                    this.domElement.addEventListener('touchend', this._onTouchEnd.bind(this), false);
-                    this.domElement.addEventListener('touchmove', this._onTouchMove.bind(this), false);
-
-                    window.addEventListener('keydown', this._onKeyDown.bind(this), false);
-
-                    // 初始化
-                    this.update();
-                }
-
-                // 公開方法
-                update() {
-                    const offset = new THREE.Vector3();
-
-                    // 將相機從當前位置移動到目標位置
-                    const position = this.camera.position;
-                    offset.copy(position).sub(this.target);
-
-                    // 旋轉偏移量
-                    this._spherical.setFromVector3(offset);
-                    this._spherical.theta += this._sphericalDelta.theta;
-                    this._spherical.phi += this._sphericalDelta.phi;
-
-                    // 限制phi範圍
-                    this._spherical.phi = Math.max(this.minPolarAngle, Math.min(this.maxPolarAngle, this._spherical.phi));
-                    this._spherical.makeSafe();
-
-                    // 縮放
-                    this._spherical.radius *= this._scale;
-                    this._spherical.radius = Math.max(this.minDistance, Math.min(this.maxDistance, this._spherical.radius));
-
-                    // 平移
-                    this.target.add(this._panOffset);
-
-                    // 將球坐標轉回笛卡爾坐標
-                    offset.setFromSpherical(this._spherical);
-
-                    // 更新相機位置
-                    position.copy(this.target).add(offset);
-                    this.camera.lookAt(this.target);
-
-                    // 重置變化量
-                    this._sphericalDelta.set(0, 0, 0);
-                    this._scale = 1;
-                    this._panOffset.set(0, 0, 0);
-
-                    return true;
-                }
-
-                // 私有方法：事件處理
-                _onContextMenu(event) {
-                    if (this.enabled === false) return;
-                    event.preventDefault();
-                }
-
-                _onMouseDown(event) {
-                    if (this.enabled === false) return;
-
-                    event.preventDefault();
-
-                    if (event.button === 0) {
-                        this._state = 'ROTATE';
-                        this._rotateStart.set(event.clientX, event.clientY);
-                    } else if (event.button === 1) {
-                        this._state = 'DOLLY';
-                        this._dollyStart.set(event.clientX, event.clientY);
-                    } else if (event.button === 2) {
-                        this._state = 'PAN';
-                        this._panStart.set(event.clientX, event.clientY);
-                    }
-
-                    document.addEventListener('mousemove', this._onMouseMove.bind(this), false);
-                    document.addEventListener('mouseup', this._onMouseUp.bind(this), false);
-                }
-
-                _onMouseMove(event) {
-                    if (this.enabled === false) return;
-
-                    event.preventDefault();
-
-                    if (this._state === 'ROTATE') {
-                        this._rotateEnd.set(event.clientX, event.clientY);
-                        this._rotateDelta.subVectors(this._rotateEnd, this._rotateStart);
-
-                        const element = this.domElement;
-                        this._sphericalDelta.theta -= 2 * Math.PI * this._rotateDelta.x / element.clientWidth * this.rotateSpeed;
-                        this._sphericalDelta.phi -= 2 * Math.PI * this._rotateDelta.y / element.clientHeight * this.rotateSpeed;
-
-                        this._rotateStart.copy(this._rotateEnd);
-
-                    } else if (this._state === 'DOLLY') {
-                        this._dollyEnd.set(event.clientX, event.clientY);
-                        this._dollyDelta.subVectors(this._dollyEnd, this._dollyStart);
-
-                        if (this._dollyDelta.y > 0) {
-                            this._scale /= 1.1;
-                        } else if (this._dollyDelta.y < 0) {
-                            this._scale *= 1.1;
-                        }
-
-                        this._dollyStart.copy(this._dollyEnd);
-
-                    } else if (this._state === 'PAN') {
-                        this._panEnd.set(event.clientX, event.clientY);
-                        this._panDelta.subVectors(this._panEnd, this._panStart);
-
-                        this._pan(this._panDelta.x, this._panDelta.y);
-
-                        this._panStart.copy(this._panEnd);
-                    }
-                }
-
-                _onMouseUp(event) {
-                    if (this.enabled === false) return;
-
-                    document.removeEventListener('mousemove', this._onMouseMove.bind(this), false);
-                    document.removeEventListener('mouseup', this._onMouseUp.bind(this), false);
-
-                    this._state = 'NONE';
-                }
-
-                _onMouseWheel(event) {
-                    if (this.enabled === false || this.enableZoom === false || this._state !== 'NONE') return;
-
-                    event.preventDefault();
-                    event.stopPropagation();
-
-                    if (event.deltaY < 0) {
-                        this._scale *= 1.1;
-                    } else {
-                        this._scale /= 1.1;
-                    }
-                }
-
-                _onTouchStart(event) {
-                    if (this.enabled === false) return;
-
-                    event.preventDefault();
-
-                    switch (event.touches.length) {
-                        case 1:
-                            this._state = 'ROTATE';
-                            this._rotateStart.set(event.touches[0].pageX, event.touches[0].pageY);
-                            break;
-                        case 2:
-                            this._state = 'DOLLY_PAN';
-                            const dx = event.touches[0].pageX - event.touches[1].pageX;
-                            const dy = event.touches[0].pageY - event.touches[1].pageY;
-                            const distance = Math.sqrt(dx * dx + dy * dy);
-                            this._dollyStart.set(0, distance);
-                            this._panStart.set(
-                                (event.touches[0].pageX + event.touches[1].pageX) / 2,
-                                (event.touches[0].pageY + event.touches[1].pageY) / 2
-                            );
-                            break;
-                        default:
-                            this._state = 'NONE';
-                    }
-                }
-
-                _onTouchMove(event) {
-                    if (this.enabled === false) return;
-
-                    event.preventDefault();
-                    event.stopPropagation();
-
-                    switch (event.touches.length) {
-                        case 1:
-                            if (this._state !== 'ROTATE') return;
-                            this._rotateEnd.set(event.touches[0].pageX, event.touches[0].pageY);
-                            this._rotateDelta.subVectors(this._rotateEnd, this._rotateStart);
-
-                            const element = this.domElement;
-                            this._sphericalDelta.theta -= 2 * Math.PI * this._rotateDelta.x / element.clientWidth * this.rotateSpeed;
-                            this._sphericalDelta.phi -= 2 * Math.PI * this._rotateDelta.y / element.clientHeight * this.rotateSpeed;
-
-                            this._rotateStart.copy(this._rotateEnd);
-                            break;
-
-                        case 2:
-                            if (this._state !== 'DOLLY_PAN') return;
-
-                            // 縮放
-                            const dx = event.touches[0].pageX - event.touches[1].pageX;
-                            const dy = event.touches[0].pageY - event.touches[1].pageY;
-                            const distance = Math.sqrt(dx * dx + dy * dy);
-
-                            this._dollyEnd.set(0, distance);
-                            this._dollyDelta.subVectors(this._dollyEnd, this._dollyStart);
-
-                            if (this._dollyDelta.y > 0) {
-                                this._scale /= 1.1;
-                            } else if (this._dollyDelta.y < 0) {
-                                this._scale *= 1.1;
-                            }
-
-                            this._dollyStart.copy(this._dollyEnd);
-
-                            // 平移
-                            const panX = (event.touches[0].pageX + event.touches[1].pageX) / 2;
-                            const panY = (event.touches[0].pageY + event.touches[1].pageY) / 2;
-
-                            this._panEnd.set(panX, panY);
-                            this._panDelta.subVectors(this._panEnd, this._panStart);
-
-                            this._pan(this._panDelta.x, this._panDelta.y);
-
-                            this._panStart.copy(this._panEnd);
-                            break;
-
-                        default:
-                            this._state = 'NONE';
-                    }
-                }
-
-                _onTouchEnd(event) {
-                    if (this.enabled === false) return;
-                    this._state = 'NONE';
-                }
-
-                _onKeyDown(event) {
-                    if (this.enabled === false || this.enablePan === false) return;
-
-                    switch (event.key) {
-                        case this.keys.UP:
-                            this._pan(0, this.keyPanSpeed);
-                            break;
-                        case this.keys.BOTTOM:
-                            this._pan(0, -this.keyPanSpeed);
-                            break;
-                        case this.keys.LEFT:
-                            this._pan(this.keyPanSpeed, 0);
-                            break;
-                        case this.keys.RIGHT:
-                            this._pan(-this.keyPanSpeed, 0);
-                            break;
-                    }
-                }
-
-                _pan(deltaX, deltaY) {
-                    const offset = new THREE.Vector3();
-
-                    const element = this.domElement;
-
-                    if (this.camera instanceof THREE.PerspectiveCamera) {
-                        // 透視相機
-                        const position = this.camera.position;
-                        offset.copy(position).sub(this.target);
-                        let targetDistance = offset.length();
-
-                        // 調整距離
-                        targetDistance *= Math.tan((this.camera.fov / 2) * Math.PI / 180.0);
-
-                        this._panLeft(2 * deltaX * targetDistance / element.clientHeight, this.camera.matrix);
-                        this._panUp(2 * deltaY * targetDistance / element.clientHeight, this.camera.matrix);
-
-                    } else if (this.camera instanceof THREE.OrthographicCamera) {
-                        // 正交相機
-                        this._panLeft(deltaX * (this.camera.right - this.camera.left) / this.camera.zoom / element.clientWidth, this.camera.matrix);
-                        this._panUp(deltaY * (this.camera.top - this.camera.bottom) / this.camera.zoom / element.clientHeight, this.camera.matrix);
-                    }
-                }
-
-                _panLeft(distance, objectMatrix) {
-                    const v = new THREE.Vector3();
-                    v.setFromMatrixColumn(objectMatrix, 0); // 獲取X列
-                    v.multiplyScalar(-distance);
-                    this._panOffset.add(v);
-                }
-
-                _panUp(distance, objectMatrix) {
-                    const v = new THREE.Vector3();
-
-                    if (this.screenSpacePanning === true) {
-                        v.setFromMatrixColumn(objectMatrix, 1);
-                    } else {
-                        v.setFromMatrixColumn(objectMatrix, 0);
-                        v.crossVectors(this.camera.up, v);
-                    }
-
-                    v.multiplyScalar(distance);
-                    this._panOffset.add(v);
-                }
-            }
-
-            // 添加THREE.MOUSE常量（原本在THREE.js中定義）
-            THREE.MOUSE = { LEFT: 0, MIDDLE: 1, RIGHT: 2 };
-
-            // 創建控制器
-            const controls = new OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.dampingFactor = 0.25;
-
-            // 設置初始視角更接近Python版本
-            camera.position.set(15, 8, 15);
-            controls.target.set(0, 0, 0);
-            controls.update();
-
-            // 處理窗口大小變化
-            window.addEventListener('resize', function () {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
-
-            // 動畫循環
-            function animate() {
-                requestAnimationFrame(animate);
-                controls.update();
-                renderer.render(scene, camera);
-            }
-
-            animate();
-
-        } catch (error) {
-            // 顯示錯誤信息
-            const errorDiv = document.getElementById('error');
-            errorDiv.style.display = 'block';
-            errorDiv.textContent = '錯誤：' + error.message;
-            console.error('3D圓環渲染錯誤：', error);
-        }
-    </script>
+    <!-- 導航欄 -->
+    <nav id="navbar">
+        <div class="logo">您的名字</div>
+        <ul class="nav-links">
+            <li><a href="#home">首頁</a></li>
+            <li><a href="#about">關於我</a></li>
+            <li><a href="#skills">技能</a></li>
+            <li><a href="#projects">作品集</a></li>
+            <li><a href="#contact">聯絡我</a></li>
+        </ul>
+        <div class="burger">
+            <div class="line1"></div>
+            <div class="line2"></div>
+            <div class="line3"></div>
+        </div>
+    </nav>
+
+    <!-- 首頁部分 -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1 class="fade-in">您好，我是<span class="highlight">您的名字</span></h1>
+            <p class="fade-in delay-1">前端開發者 | UI/UX設計師 | 攝影愛好者</p>
+            <div class="cta-buttons fade-in delay-2">
+                <a href="#projects" class="btn primary-btn">查看作品</a>
+                <a href="#contact" class="btn secondary-btn">聯絡我</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 關於我部分 -->
+    <section id="about" class="section">
+        <div class="container">
+            <h2 class="section-title">關於我</h2>
+            <div class="about-content">
+                <div class="about-image slide-in-left">
+                    <div class="image-placeholder">您的照片</div>
+                </div>
+                <div class="about-text slide-in-right">
+                    <p>歡迎來到我的個人網站！我是一位充滿熱情的前端開發者，擅長創建美觀且功能強大的網站。</p>
+                    <p>我擁有豐富的HTML、CSS和JavaScript經驗，致力於打造出色的用戶體驗和互動式網站設計。</p>
+                    <p>除了編程，我還熱愛攝影和旅行，這些愛好幫助我培養了獨特的創意視角。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 技能部分 -->
+    <section id="skills" class="section gray-bg">
+        <div class="container">
+            <h2 class="section-title">我的技能</h2>
+            <div class="skills-container">
+                <div class="skill-item fade-in">
+                    <div class="skill-icon"><i class="fab fa-html5"></i></div>
+                    <h3>HTML5</h3>
+                    <div class="skill-bar">
+                        <div class="skill-progress" style="width: 90%"></div>
+                    </div>
+                </div>
+                <div class="skill-item fade-in delay-1">
+                    <div class="skill-icon"><i class="fab fa-css3-alt"></i></div>
+                    <h3>CSS3</h3>
+                    <div class="skill-bar">
+                        <div class="skill-progress" style="width: 85%"></div>
+                    </div>
+                </div>
+                <div class="skill-item fade-in delay-2">
+                    <div class="skill-icon"><i class="fab fa-js"></i></div>
+                    <h3>JavaScript</h3>
+                    <div class="skill-bar">
+                        <div class="skill-progress" style="width: 80%"></div>
+                    </div>
+                </div>
+                <div class="skill-item fade-in delay-3">
+                    <div class="skill-icon"><i class="fas fa-mobile-alt"></i></div>
+                    <h3>響應式設計</h3>
+                    <div class="skill-bar">
+                        <div class="skill-progress" style="width: 88%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 作品集部分 -->
+    <section id="projects" class="section">
+        <div class="container">
+            <h2 class="section-title">作品集</h2>
+            <div class="projects-grid">
+                <div class="project-card scale-in">
+                    <div class="project-img">項目圖片1</div>
+                    <h3>項目名稱1</h3>
+                    <p>項目描述。此處可以詳細說明您的項目內容、使用的技術以及解決的問題。</p>
+                    <a href="#" class="btn small-btn">查看詳情</a>
+                </div>
+                <div class="project-card scale-in delay-1">
+                    <div class="project-img">項目圖片2</div>
+                    <h3>項目名稱2</h3>
+                    <p>項目描述。此處可以詳細說明您的項目內容、使用的技術以及解決的問題。</p>
+                    <a href="#" class="btn small-btn">查看詳情</a>
+                </div>
+                <div class="project-card scale-in delay-2">
+                    <div class="project-img">項目圖片3</div>
+                    <h3>項目名稱3</h3>
+                    <p>項目描述。此處可以詳細說明您的項目內容、使用的技術以及解決的問題。</p>
+                    <a href="#" class="btn small-btn">查看詳情</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 聯絡部分 -->
+    <section id="contact" class="section gray-bg">
+        <div class="container">
+            <h2 class="section-title">聯絡我</h2>
+            <div class="contact-container">
+                <div class="contact-info slide-in-left">
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <p>example@email.com</p>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <p>+886 912 345 678</p>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <p>台北市，台灣</p>
+                    </div>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#"><i class="fab fa-github"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="contact-form slide-in-right">
+                    <form id="contactForm">
+                        <div class="form-group">
+                            <input type="text" id="name" placeholder="您的姓名" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" id="email" placeholder="您的電子郵件" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="subject" placeholder="主旨" required>
+                        </div>
+                        <div class="form-group">
+                            <textarea id="message" placeholder="訊息" required></textarea>
+                        </div>
+                        <button type="submit" class="btn primary-btn">發送訊息</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 頁腳 -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 您的名字. 保留所有權利。</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
 </body>
-
-</html>
+</html> 
