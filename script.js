@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 當點擊「願意」按鈕
     yesBtn.addEventListener('click', function() {
         console.log('點擊了願意按鈕');
+        
         // 顯示回應
         response.classList.remove('hidden');
         response.classList.add('visible');
@@ -29,6 +30,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 隱藏按鈕
         document.querySelector('.buttons').style.display = 'none';
+        
+        // 在新分頁中打開Rick Roll視頻
+        setTimeout(function() {
+            window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
+        }, 1500); // 延遲1.5秒後打開，讓用戶先看到回應
     });
     
     // 當點擊「考慮一下」按鈕
