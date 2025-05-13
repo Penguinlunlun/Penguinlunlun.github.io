@@ -3,175 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>個人介紹網站</title>
+    <title>我的告白</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- 導航欄 -->
-    <nav id="navbar">
-        <div class="logo">您的名字</div>
-        <ul class="nav-links">
-            <li><a href="#home">首頁</a></li>
-            <li><a href="#about">關於我</a></li>
-            <li><a href="#skills">技能</a></li>
-            <li><a href="#projects">作品集</a></li>
-            <li><a href="#contact">聯絡我</a></li>
-        </ul>
-        <div class="burger">
-            <div class="line1"></div>
-            <div class="line2"></div>
-            <div class="line3"></div>
-        </div>
-    </nav>
-
-    <!-- 首頁部分 -->
-    <section id="home" class="hero">
-        <div class="hero-content">
-            <h1 class="fade-in">您好，我是<span class="highlight">您的名字</span></h1>
-            <p class="fade-in delay-1">前端開發者 | UI/UX設計師 | 攝影愛好者</p>
-            <div class="cta-buttons fade-in delay-2">
-                <a href="#projects" class="btn primary-btn">查看作品</a>
-                <a href="#contact" class="btn secondary-btn">聯絡我</a>
+    <div class="container">
+        <div class="heart"></div>
+        
+        <div class="content">
+            <h1 class="title">致我最喜歡的人</h1>
+            
+            <div class="message-box">
+                <p class="message">自從遇見你的那一刻起，我的世界便多了一抹色彩。你的笑容如春風般溫柔，你的聲音如夏雨般清脆。</p>
+                <p class="message">在認識你的每一天，我都感到無比幸福。我喜歡與你分享生活中的點點滴滴，喜歡聽你講述你的夢想與熱情。</p>
+                <p class="message">或許我不是最完美的人，但我願意用最真誠的心對你。我想告訴你：</p>
+                <p class="confession">我喜歡你，願意成為我的女朋友嗎？</p>
+            </div>
+            
+            <div class="buttons">
+                <button id="yesBtn" class="btn yes-btn">願意</button>
+                <button id="noBtn" class="btn no-btn">考慮一下</button>
+            </div>
+            
+            <div id="response" class="response-box hidden">
+                <p id="responseText" class="response-text"></p>
             </div>
         </div>
-    </section>
 
-    <!-- 關於我部分 -->
-    <section id="about" class="section">
-        <div class="container">
-            <h2 class="section-title">關於我</h2>
-            <div class="about-content">
-                <div class="about-image slide-in-left">
-                    <div class="image-placeholder">
-                        <img src="images/profile-icon.png" alt="個人頭像" class="profile-image">
-                    </div>
-                </div>
-                <div class="about-text slide-in-right">
-                    <p>歡迎來到我的個人網站！我是一位充滿熱情的前端開發者，擅長創建美觀且功能強大的網站。</p>
-                    <p>我擁有豐富的HTML、CSS和JavaScript經驗，致力於打造出色的用戶體驗和互動式網站設計。</p>
-                    <p>除了編程，我還熱愛攝影和旅行，這些愛好幫助我培養了獨特的創意視角。</p>
-                </div>
-            </div>
+        <div class="floating-hearts">
+            <div class="floating-heart">❤</div>
+            <div class="floating-heart">❤</div>
+            <div class="floating-heart">❤</div>
+            <div class="floating-heart">❤</div>
+            <div class="floating-heart">❤</div>
+            <div class="floating-heart">❤</div>
+            <div class="floating-heart">❤</div>
+            <div class="floating-heart">❤</div>
+            <div class="floating-heart">❤</div>
+            <div class="floating-heart">❤</div>
         </div>
-    </section>
-
-    <!-- 技能部分 -->
-    <section id="skills" class="section gray-bg">
-        <div class="container">
-            <h2 class="section-title">我的技能</h2>
-            <div class="skills-container">
-                <div class="skill-item fade-in">
-                    <div class="skill-icon"><i class="fab fa-html5"></i></div>
-                    <h3>HTML5</h3>
-                    <div class="skill-bar">
-                        <div class="skill-progress" style="width: 90%"></div>
-                    </div>
-                </div>
-                <div class="skill-item fade-in delay-1">
-                    <div class="skill-icon"><i class="fab fa-css3-alt"></i></div>
-                    <h3>CSS3</h3>
-                    <div class="skill-bar">
-                        <div class="skill-progress" style="width: 85%"></div>
-                    </div>
-                </div>
-                <div class="skill-item fade-in delay-2">
-                    <div class="skill-icon"><i class="fab fa-js"></i></div>
-                    <h3>JavaScript</h3>
-                    <div class="skill-bar">
-                        <div class="skill-progress" style="width: 80%"></div>
-                    </div>
-                </div>
-                <div class="skill-item fade-in delay-3">
-                    <div class="skill-icon"><i class="fas fa-mobile-alt"></i></div>
-                    <h3>響應式設計</h3>
-                    <div class="skill-bar">
-                        <div class="skill-progress" style="width: 88%"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 作品集部分 -->
-    <section id="projects" class="section">
-        <div class="container">
-            <h2 class="section-title">作品集</h2>
-            <div class="projects-grid">
-                <div class="project-card scale-in">
-                    <div class="project-img">項目圖片1</div>
-                    <h3>項目名稱1</h3>
-                    <p>項目描述。此處可以詳細說明您的項目內容、使用的技術以及解決的問題。</p>
-                    <a href="#" class="btn small-btn">查看詳情</a>
-                </div>
-                <div class="project-card scale-in delay-1">
-                    <div class="project-img">項目圖片2</div>
-                    <h3>項目名稱2</h3>
-                    <p>項目描述。此處可以詳細說明您的項目內容、使用的技術以及解決的問題。</p>
-                    <a href="#" class="btn small-btn">查看詳情</a>
-                </div>
-                <div class="project-card scale-in delay-2">
-                    <div class="project-img">項目圖片3</div>
-                    <h3>項目名稱3</h3>
-                    <p>項目描述。此處可以詳細說明您的項目內容、使用的技術以及解決的問題。</p>
-                    <a href="#" class="btn small-btn">查看詳情</a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 聯絡部分 -->
-    <section id="contact" class="section gray-bg">
-        <div class="container">
-            <h2 class="section-title">聯絡我</h2>
-            <div class="contact-container">
-                <div class="contact-info slide-in-left">
-                    <div class="contact-item">
-                        <i class="fas fa-envelope"></i>
-                        <p>example@email.com</p>
-                    </div>
-                    <div class="contact-item">
-                        <i class="fas fa-phone"></i>
-                        <p>+886 912 345 678</p>
-                    </div>
-                    <div class="contact-item">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <p>台北市，台灣</p>
-                    </div>
-                    <div class="social-links">
-                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
-                        <a href="#"><i class="fab fa-github"></i></a>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                    </div>
-                </div>
-                <div class="contact-form slide-in-right">
-                    <form id="contactForm">
-                        <div class="form-group">
-                            <input type="text" id="name" placeholder="您的姓名" required>
-                        </div>
-                        <div class="form-group">
-                            <input type="email" id="email" placeholder="您的電子郵件" required>
-                        </div>
-                        <div class="form-group">
-                            <input type="text" id="subject" placeholder="主旨" required>
-                        </div>
-                        <div class="form-group">
-                            <textarea id="message" placeholder="訊息" required></textarea>
-                        </div>
-                        <button type="submit" class="btn primary-btn">發送訊息</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 頁腳 -->
-    <footer>
-        <div class="container">
-            <p>&copy; 2023 您的名字. 保留所有權利。</p>
-        </div>
-    </footer>
+    </div>
 
     <script src="script.js"></script>
 </body>
